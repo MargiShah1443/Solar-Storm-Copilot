@@ -1,67 +1,74 @@
+"""
+scripts/explore_time_window.py
+-------------------------------
+Diagnostic script to explore data coverage and storm rates by year.
+Useful for choosing the final training date range and verifying that
+OMNI / Kp data is adequately populated after running download_data.py.
+
+Previously, this script defined its own local yearly_coverage_table()
+function which was a near-duplicate of make_yearly_coverage_table()
+in src/eda/coverage.py.  That duplicate has been removed.
+All coverage logic now lives in src/eda/coverage.py.
+"""
 from __future__ import annotations
 
-import pandas as pd
-
 from src.config import Config
+from src.eda.coverage import make_yearly_coverage_table, score_year_window
 from src.io.loaders import load_donki_cme, load_kp_csv, load_omni_csv
-from src.preprocessing.omni_window_features import OmniWindowConfig, add_omni_arrival_window_features, omni_coverage_flag
-from scripts.run_eda import label_storms_from_kp
+from src.preprocessing.omni_window_features import OmniWindowConfig, add_kp_labels
+from src.utils.logging_utils import get_logger
+
+log = get_logger(__name__)
 
 
-def yearly_coverage_table(
-    df: pd.DataFrame,
-    time_col: str = "startTime",
-    omni_cfg: OmniWindowConfig = OmniWindowConfig(),
-) -> pd.DataFrame:
-    df = df.copy()
-    df[time_col] = pd.to_datetime(df[time_col], utc=True, errors="coerce")
-    df["year"] = df[time_col].dt.year
-
-    # coverage flags
-    has_kp = df["kp_max_h72"].notna()
-    has_omni = omni_coverage_flag(df, cfg=omni_cfg)
-
-    # group summary
-    g = df.groupby("year")
-    out = g.size().rename("cme_total").to_frame()
-    out["cme_with_kp"] = g.apply(lambda x: int(x["kp_max_h72"].notna().sum()))
-    out["kp_coverage_pct"] = (out["cme_with_kp"] / out["cme_total"] * 100).round(1)
-
-    out["cme_with_omni"] = g.apply(lambda x: int(omni_coverage_flag(x, cfg=omni_cfg).sum()))
-    out["omni_coverage_pct"] = (out["cme_with_omni"] / out["cme_total"] * 100).round(1)
-
-    out["storm_count"] = g["label_storm"].sum().astype(int)
-    out["storm_rate_pct"] = (out["storm_count"] / out["cme_total"] * 100).round(1)
-
-    return out.reset_index()
-
-
-def main():
+def main() -> None:
     cfg = Config()
-    omni_cfg = OmniWindowConfig(start_hours=24, end_hours=72)
+    omni_cfg = OmniWindowConfig(
+        start_hours=cfg.omni_window_start_hours,
+        end_hours=cfg.omni_window_end_hours,
+    )
 
-    print("[INFO] Loading datasets for time-window exploration...")
+    log.info("Loading datasets for time-window exploration...")
     df_cme = load_donki_cme(cfg.donki_cme_file)
     df_kp = load_kp_csv(cfg.kp_file)
     df_omni = load_omni_csv(cfg.omni_file)
 
-    print("[INFO] Labeling storms using Kp lookahead window...")
-    df_labeled = label_storms_from_kp(df_cme, df_kp)
-
-    print("[INFO] Adding OMNI arrival-window features (T+24 to T+72)...")
-    df_feat = add_omni_arrival_window_features(
-        df_labeled,
-        df_omni,
-        cme_time_col="startTime",
-        omni_time_col="time",
-        cfg=omni_cfg,
+    log.info("Labeling storms using Kp lookahead window...")
+    df_labeled = add_kp_labels(
+        df_cme,
+        df_kp,
+        lookahead_hours=cfg.kp_lookahead_hours,
+        storm_threshold=cfg.kp_storm_threshold,
     )
 
-    print("[INFO] Computing per-year coverage table...")
-    cov = yearly_coverage_table(df_feat, time_col="startTime", omni_cfg=omni_cfg)
+    log.info("Computing per-year coverage table...")
+    cov = make_yearly_coverage_table(
+        df_labeled,
+        df_kp,
+        df_omni,
+        horizon_hours=cfg.kp_lookahead_hours,
+        omni_window_hours=omni_cfg.start_hours,
+        kp_threshold=cfg.kp_storm_threshold,
+    )
 
     print("\n=== Yearly Coverage Summary ===")
     print(cov.to_string(index=False))
+
+    # Score the full 2015–2023 window as a candidate training range
+    print("\n=== Window Scoring: 2015–2023 ===")
+    score = score_year_window(
+        cov,
+        start_year=cfg.start_year,
+        end_year=cfg.end_year,
+    )
+    for k, v in score.items():
+        print(f"  {k}: {v}")
+
+    # Also score a shorter candidate window (e.g. 2017–2023)
+    print("\n=== Window Scoring: 2017–2023 ===")
+    score2 = score_year_window(cov, start_year=2017, end_year=2023)
+    for k, v in score2.items():
+        print(f"  {k}: {v}")
 
 
 if __name__ == "__main__":
