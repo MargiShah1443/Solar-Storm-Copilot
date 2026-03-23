@@ -1,0 +1,20 @@
+PHYSICS BASELINE — Validation Set
+Rule: omni_w24_72_min_Bz_gsm < -8.0 nT  AND  omni_w24_72_mean_V > 450.0 km/s
+=======================================================
+              precision    recall  f1-score   support
+
+No Storm (0)     0.8882    1.0000    0.9408       453
+   Storm (1)     0.0000    0.0000    0.0000        57
+
+    accuracy                         0.8882       510
+   macro avg     0.4441    0.5000    0.4704       510
+weighted avg     0.7890    0.8882    0.8357       510
+
+AUC-ROC   : 0.5000
+F1 (storm): 0.0000
+Precision : 0.0000
+Recall    : 0.0000
+
+Confusion matrix:
+  TN=453  FP=0
+  FN=57  TP=0

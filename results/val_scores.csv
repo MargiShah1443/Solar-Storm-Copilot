@@ -1,0 +1,5 @@
+model,split,f1_storm,precision,recall,auc_roc,tp,fp,tn,fn,avg_prec
+physics_baseline,val,0.0,0.0,0.0,0.5,0,0,453,57,
+Logistic Regression,val,0.6395,0.5222,0.8246,0.9534,47,43,410,10,0.7918
+Random Forest,val,0.6615,0.589,0.7544,0.9466,43,30,423,14,0.8059
+XGBoost,val,0.7288,0.7049,0.7544,0.945,43,18,435,14,0.8152
