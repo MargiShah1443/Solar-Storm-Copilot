@@ -1,0 +1,5 @@
+echo data/ > .gitignore
+echo models/ >> .gitignore
+echo __pycache__/ >> .gitignore
+echo *.pkl >> .gitignore
+echo *.pyc >> .gitignore
