@@ -14,11 +14,12 @@
 3. [Dataset](#3-dataset)
 4. [Pipeline Overview](#4-pipeline-overview)
 5. [Project Structure](#5-project-structure)
-6. [Setup and Installation](#6-setup-and-installation)
-7. [How to Run](#7-how-to-run)
-8. [Results](#8-results)
-9. [Key Findings](#9-key-findings)
-10. [References](#10-references)
+6. [Final Report](#6-final-report)
+7. [Setup and Installation](#7-setup-and-installation)
+8. [How to Run](#8-how-to-run)
+9. [Results](#9-results)
+10. [Key Findings](#10-key-findings)
+11. [References](#11-references)
 
 ---
 
@@ -159,6 +160,9 @@ The test set spans Solar Cycle 25 — a genuinely different solar cycle from the
 ```
 Solar-Storm-Copilot/
 │
+├── Predicting_Geomagnetic_Storms_from_Solar_Eruptions_Using_Machine_Learning.pdf
+│                                     # Final written report (see Section 6)
+│
 ├── data/
 │   ├── raw/                          # Downloaded source files (not in git)
 │   │   ├── omni_hro_modified/        # OMNI .asc files, one per year (2015–2023)
@@ -251,12 +255,27 @@ Solar-Storm-Copilot/
 ├── debug_omni.py                     # Diagnostic script for OMNI parser
 ├── README.md                         # This file
 └── requirements.txt                  # Python dependencies
-├── Predicting_Geomagnetic_Storms_from_Solar_Eruptions_Using_Machine_Learning.pdf
 ```
 
 ---
 
-## 6. Setup and Installation
+## 6. Final Report
+
+The full written report is included in this repository:
+
+**[`Predicting_Geomagnetic_Storms_from_Solar_Eruptions_Using_Machine_Learning.pdf`](./Predicting_Geomagnetic_Storms_from_Solar_Eruptions_Using_Machine_Learning.pdf)**
+
+The report is a 13-page double-spaced scientific paper covering the following:
+
+- **Introduction** — Background on geomagnetic storms and their real-world impact, explanation of why the southward IMF component (Bz) is the key prediction challenge, and a review of prior academic work including Camporeale (2019) on machine learning in space weather, Bobra & Ilonidis (2016), Riley et al. (2018), and Dimmock et al. (2019).
+- **Methods** — Full description of the three NASA data sources, the storm labeling procedure, all 61 engineered features, the time-based Solar Cycle 24/25 train-test split, training details for Logistic Regression, Random Forest, and XGBoost, and the design of the SHAP explainability analysis and SYM_H/AE ablation study.
+- **Results** — Quantitative outcomes across all experiments: EDA findings, validation set model comparison (XGBoost selected with F1 = 0.729, AUC = 0.945), SHAP top-10 feature importance table with physical interpretations, final test set evaluation (F1 = 0.685, AUC-ROC = 0.909, 407/536 storms correctly identified), and the ablation study showing a 3.7-point F1 drop confirming genuine predictive signal rather than label leakage. Includes 7 figures and 3 tables.
+- **Conclusions** — Strengths of the cross-cycle evaluation framework, comparison to physics-based approaches, limitations of summary-statistic feature engineering, and proposed future improvements.
+- **Works Cited** — 11 references covering all data sources, software, and academic papers cited in the report.
+
+---
+
+## 7. Setup and Installation
 
 ### Prerequisites
 
@@ -302,7 +321,7 @@ requests>=2.31
 
 ---
 
-## 7. How to Run
+## 8. How to Run
 
 Run every step from the **project root directory**. Each script is a self-contained module that reads from and writes to the paths defined in `config.py`.
 
@@ -408,7 +427,7 @@ python -m scripts.evaluate
 
 ---
 
-## 8. Results
+## 9. Results
 
 ### Model Comparison — Validation Set (2021)
 
@@ -459,7 +478,7 @@ The ablation study showed F1 decreased by only **3.7 points** (0.685 → 0.648) 
 
 ---
 
-## 9. Key Findings
+## 10. Key Findings
 
 **1. ML substantially outperforms physics rules.**
 The two-condition physics baseline (Bz < −8 nT AND V > 450 km/s) predicted zero storms on the 2021 validation set, achieving F1=0.000. XGBoost achieved F1=0.729 on the same data, demonstrating that learned non-linear combinations of 61 features capture storm-driving conditions that simple threshold rules miss entirely.
@@ -478,7 +497,7 @@ Solar wind velocity (`mean_V`) ranked 52nd out of 61 features by SHAP importance
 
 ---
 
-## 10. References
+## 11. References
 
 1. **NASA DONKI CME and Flare Catalog**  
    https://kauai.ccmc.gsfc.nasa.gov/DONKI/
