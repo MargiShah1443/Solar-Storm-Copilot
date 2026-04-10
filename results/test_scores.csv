@@ -1,0 +1,3 @@
+model,split,f1_storm,precision,recall,auc_roc,avg_prec,tp,fp,tn,fn
+XGBoost (full features),test,0.6852,0.6242,0.7593,0.9091,0.8003,407,245,1471,129
+XGBoost (no SYM_H/AE),test,0.6482,0.5634,0.7631,0.8667,0.7117,409,317,1399,127
